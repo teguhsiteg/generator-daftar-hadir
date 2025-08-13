@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Daftar Hadir Dinamis</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+        :root {
+            --primary-color: #4A90E2;
+            --primary-hover-color: #357ABD;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --danger-hover-color: #c0392b;
+            --light-gray-color: #f4f7f9;
+            --dark-gray-color: #7f8c8d;
+            --border-color: #dcdfe6;
+            --text-color: #333;
+            --white-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-gray-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        #loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background-color: var(--primary-color);
+            width: 0%;
+            z-index: 9999;
+            transition: width 0.4s ease-out;
+        }
+
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-notification {
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: var(--white-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: translateX(100%);
+            animation: slideIn 0.5s forwards, fadeOut 0.5s 4.5s forwards;
+        }
+
+        .toast-notification.info { background-color: var(--primary-color); }
+        .toast-notification.success { background-color: var(--success-color); }
+        .toast-notification.error { background-color: var(--danger-color); }
+
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-20px); } }
+
+        .form-container {
+            background-color: var(--white-color);
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; font-weight: 600; }
+        p.subtitle { text-align: center; margin-bottom: 30px; color: var(--dark-gray-color); }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--light-gray-color);
+            padding-bottom: 10px;
+        }
+        
+        .subsection-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; color: #555; }
+
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%; padding: 12px; border: 1px solid var(--border-color);
+            border-radius: 8px; box-sizing: border-box; font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: white;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+            outline: none; border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        textarea { height: 180px; resize: vertical; }
+        small { display: block; margin-top: 5px; color: var(--dark-gray-color); }
+
+        .dynamic-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .dynamic-row input { flex: 1; padding: 10px; }
+
+        #table-column-formats-container {
+            background-color: var(--light-gray-color);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .column-format-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-end;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .column-format-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .column-format-row .col-name {
+            font-weight: 600;
+            flex-basis: 100%;
+            color: var(--primary-color);
+        }
+        .column-format-row .form-group {
+            flex: 1;
+            min-width: 120px;
+            margin-bottom: 0;
+        }
+        .column-format-row .form-group label {
+            font-size: 12px;
+        }
+
+        /* --- PERUBAHAN UTAMA: Desain Area Upload Logo & Slider --- */
+        .logo-upload-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        .logo-upload-wrapper {
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+        }
+        .logo-preview-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo-preview-img {
+            width: 80px; height: 80px; border: 2px dashed var(--border-color);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            padding: 5px;
+            position: relative;
+        }
+        .logo-preview-img img {
+            max-width: 100%; max-height: 100%; object-fit: contain;
+            border-radius: 50%;
+        }
+        .btn-upload {
+            background-color: var(--light-gray-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-upload:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .logo-size-control {
+            width: 100%;
+        }
+        .logo-size-control label {
+            display: flex; justify-content: space-between; font-size: 14px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        input[type="file"] { display: none; }
+        /* --- AKHIR PERUBAHAN --- */
+
+        .input-mode-selector {
+            display: flex; gap: 20px; background-color: var(--light-gray-color);
+            padding: 10px; border-radius: 8px;
+        }
+        .input-mode-selector label {
+            display: flex; align-items: center; gap: 5px; cursor: pointer; margin-bottom: 0;
+        }
+        
+        .toggle-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 28px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        .collapsible-content {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .signature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .btn { padding: 10px 15px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background-color 0.3s, transform 0.2s; }
+        .btn-add { background-color: var(--success-color); color: white; display: inline-block; margin-top: 5px; width: 100%; }
+        .btn-add:hover { background-color: #27ae60; }
+        .btn-delete { background-color: var(--danger-color); color: white; width: 38px; height: 38px; flex-shrink: 0; font-size: 16px; }
+        .btn-delete:hover { background-color: var(--danger-hover-color); }
+        .btn-submit { width: 100%; padding: 15px; background-color: var(--primary-color); color: white; font-size: 16px; font-weight: 600; margin-top: 30px; }
+        .btn-submit:hover { background-color: var(--primary-hover-color); }
+        .btn-submit:disabled { background-color: var(--dark-gray-color); cursor: not-allowed; }
+        .btn:active { transform: scale(0.98); }
+
+        .ad-footer {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 40px;
+            padding: 20px;
+            text-align: center;
+            background-color: #e9ecef;
+            border-radius: 12px;
+        }
+        
+        .copyright-footer {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+            padding: 20px;
+            text-align: center;
+            background-color: #0d2d52;
+            color: #ffffff;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        .copyright-footer a {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+        .copyright-footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-bar"></div>
+    <div id="notification-container"></div>
+
+    <div class="form-container">
+        <h1>Generator Daftar Hadir</h1>
+        <p class="subtitle">Isi dan tambahkan detail sesuai kebutuhan acara Anda.</p>
+        
+        <form id="attendance-form">
+            
+            <h2 class="section-title">Logo Dokumen</h2>
+            <div class="logo-upload-container">
+                <div class="logo-upload-wrapper">
+                    <label>Logo Kiri</label>
+                    <div class="logo-preview-box">
+                        <div class="logo-preview-img"><img id="logo-left-preview"></div>
+                        <label for="logo-left-input" class="btn-upload">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                        </label>
+                        <input type="file" id="logo-left-input" accept="image/*">
+                    </div>
+                     <div class="form-group logo-size-control">
+                        <label for="logo-size-left"><span>Ukuran: <span id="logo-size-left-value">80</span>px</span></label>
+                        <input type="range" id="logo-size-left" name="logo_size_left" min="40" max="120" value="80">
+                    </div>
+                </div>
+                <div class="logo-upload-wrapper">
+                    <label>Logo Kanan</label>
+                    <div class="logo-preview-box">
+                         <div class="logo-preview-img"><img id="logo-right-preview"></div>
+                         <label for="logo-right-input" class="btn-upload">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                         </label>
+                        <input type="file" id="logo-right-input" accept="image/*">
+                    </div>
+                    <div class="form-group logo-size-control">
+                        <label for="logo-size-right"><span>Ukuran: <span id="logo-size-right-value">80</span>px</span></label>
+                        <input type="range" id="logo-size-right" name="logo_size_right" min="40" max="120" value="80">
+                    </div>
+                </div>
+            </div>
+            
+            <h2 class="section-title">
+                <label class="toggle-label">
+                    <span>Informasi Header Dokumen</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-header-options">
+                        <span class="slider"></span>
+                    </label>
+                </label>
+            </h2>
+            <div id="collapsible-header-options" class="collapsible-content">
+                <div id="header-fields-container"></div>
+                <button type="button" class="btn btn-add" id="add-header-btn">+ Tambah Info Header</button>
+            </div>
+
+            <h2 class="section-title">Daftar Peserta</h2>
+            <div class="form-group">
+                <label for="participant-columns">Nama Kolom Tabel</label>
+                <input type="text" id="participant-columns" name="participant_columns" value="" placeholder="Contoh: NO, NIM, NAMA, TANDA TANGAN">
+                <small>Pisahkan setiap nama kolom dengan koma. Format di bawah akan diperbarui otomatis.</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="toggle-label">
+                    <span>Format Kolom Tabel (Lanjutan)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-format-options">
+                        <span class="slider"></span>
+                    </label>
+                </label>
+                <div id="collapsible-format-options" class="collapsible-content">
+                    <div id="table-column-formats-container"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Mode Input Peserta</label>
+                <div class="input-mode-selector">
+                    <label><input type="radio" name="participant_mode" value="manual" checked> Input Manual</label>
+                    <label><input type="radio" name="participant_mode" value="generate"> Generate Baris Kosong</label>
+                </div>
+            </div>
+            <div id="manual-input-container" class="form-group">
+                <label for="peserta">Data Peserta</label>
+                <textarea id="peserta" name="peserta" required placeholder="Contoh:&#10;NIM1,Nama Lengkap1&#10;NIM2,Nama Lengkap2"></textarea>
+                <small>Format: Data Kolom 1,Data Kolom 2, dst.</small>
+            </div>
+            <div id="generate-input-container" class="form-group" style="display: none;">
+                <label for="participant-count">Jumlah Baris Peserta</label>
+                <input type="number" id="participant-count" name="participant_count" min="1" value="25">
+                <small>Masukkan jumlah baris kosong yang ingin dibuat.</small>
+            </div>
+
+            <h2 class="section-title">
+                <label class="toggle-label">
+                    <span>Bagian Tanda Tangan</span>
+                     <label class="switch">
+                        <input type="checkbox" id="toggle-signature-options">
+                        <span class="slider"></span>
+                    </label>
+                </label>
+            </h2>
+            <div id="collapsible-signature-options" class="collapsible-content">
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="signature-date">Kota dan Tanggal</label>
+                    <input type="text" id="signature-date" name="signature_date" value="">
+                </div>
+                <div class="signature-grid">
+                    <div>
+                        <h3 class="subsection-title">Tanda Tangan Kiri</h3>
+                        <div id="signature-fields-left"></div>
+                        <button type="button" class="btn btn-add" id="add-signature-left-btn">+ Tambah</button>
+                    </div>
+                    <div>
+                        <h3 class="subsection-title">Tanda Tangan Tengah</h3>
+                        <div id="signature-fields-center"></div>
+                        <button type="button" class="btn btn-add" id="add-signature-center-btn">+ Tambah</button>
+                    </div>
+                    <div>
+                        <h3 class="subsection-title">Tanda Tangan Kanan</h3>
+                        <div id="signature-fields-right"></div>
+                        <button type="button" class="btn btn-add" id="add-signature-right-btn">+ Tambah</button>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="section-title">
+                 <label class="toggle-label">
+                    <span>Header & Footer Halaman (Opsional)</span>
+                     <label class="switch">
+                        <input type="checkbox" id="toggle-page-hf-options">
+                        <span class="slider"></span>
+                    </label>
+                </label>
+            </h2>
+            <div id="collapsible-page-hf-options" class="collapsible-content">
+                <div class="form-group">
+                    <label for="page-header">Teks Header Halaman</label>
+                    <input type="text" id="page-header" name="page_header" placeholder="Contoh: Dokumen Internal">
+                    <small>Teks ini akan muncul di bagian atas setiap halaman.</small>
+                </div>
+                <div class="form-group">
+                    <label for="page-footer">Teks Footer Halaman</label>
+                    <input type="text" id="page-footer" name="page_footer" placeholder="Contoh: Halaman [pageNumber] dari [totalPages]">
+                    <small>Gunakan `&lt;span class='pageNumber'&gt;&lt;/span&gt;` untuk nomor halaman saat ini dan `&lt;span class='totalPages'&gt;&lt;/span&gt;` untuk total halaman.</small>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-submit">🚀 Generate & Preview PDF</button>
+        </form>
+    </div>
+
+    <footer class="ad-footer">
+        <p style="font-size: 12px; color: #666;">ADVERTISEMENT</p>
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-1681916260628500"
+             data-ad-slot="5546332268"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </footer>
+
+    <footer class="copyright-footer">
+        <p>Copyright © 2025 Jadwal Perkuliahan FMIPA UII</p>
+        <p>Developed by <a href="#" target="_blank">Guwigo Indonesia</a></p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('attendance-form');
+            const submitButton = form.querySelector('.btn-submit');
+            const loadingBar = document.getElementById('loading-bar');
+            const notificationContainer = document.getElementById('notification-container');
+
+            const showNotification = (message, type = 'info') => {
+                const notif = document.createElement('div');
+                notif.className = `toast-notification ${type}`;
+                notif.textContent = message;
+                notificationContainer.appendChild(notif);
+                setTimeout(() => { notif.remove(); }, 5000);
+            };
+
+            const headerContainer = document.getElementById('header-fields-container');
+            const addHeaderBtn = document.getElementById('add-header-btn');
+            
+            const logoLeftInput = document.getElementById('logo-left-input');
+            const logoLeftPreview = document.getElementById('logo-left-preview');
+            const logoSizeLeftSlider = document.getElementById('logo-size-left');
+            const logoSizeLeftValue = document.getElementById('logo-size-left-value');
+
+            const logoRightInput = document.getElementById('logo-right-input');
+            const logoRightPreview = document.getElementById('logo-right-preview');
+            const logoSizeRightSlider = document.getElementById('logo-size-right');
+            const logoSizeRightValue = document.getElementById('logo-size-right-value');
+
+            const signatureContainerLeft = document.getElementById('signature-fields-left');
+            const addSignatureLeftBtn = document.getElementById('add-signature-left-btn');
+            const signatureContainerCenter = document.getElementById('signature-fields-center');
+            const addSignatureCenterBtn = document.getElementById('add-signature-center-btn');
+            const signatureContainerRight = document.getElementById('signature-fields-right');
+            const addSignatureRightBtn = document.getElementById('add-signature-right-btn');
+            
+            const participantColumnsInput = document.getElementById('participant-columns');
+            const columnFormatsContainer = document.getElementById('table-column-formats-container');
+            
+            const toggleFormatOptions = document.getElementById('toggle-format-options');
+            const collapsibleFormatOptions = document.getElementById('collapsible-format-options');
+            
+            const toggleSignatureOptions = document.getElementById('toggle-signature-options');
+            const collapsibleSignatureOptions = document.getElementById('collapsible-signature-options');
+
+            const toggleHeaderOptions = document.getElementById('toggle-header-options');
+            const collapsibleHeaderOptions = document.getElementById('collapsible-header-options');
+
+            const togglePageHFOptions = document.getElementById('toggle-page-hf-options');
+            const collapsiblePageHFOptions = document.getElementById('collapsible-page-hf-options');
+
+            let logoLeftBase64 = '';
+            let logoRightBase64 = '';
+
+            logoSizeLeftSlider.addEventListener('input', (e) => { logoSizeLeftValue.textContent = e.target.value; });
+            logoSizeRightSlider.addEventListener('input', (e) => { logoSizeRightValue.textContent = e.target.value; });
+
+            const handleLogoUpload = (input, previewImg) => {
+                input.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            previewImg.src = event.target.result;
+                            if (input.id === 'logo-left-input') logoLeftBase64 = event.target.result;
+                            if (input.id === 'logo-right-input') logoRightBase64 = event.target.result;
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            };
+
+            handleLogoUpload(logoLeftInput, logoLeftPreview);
+            handleLogoUpload(logoRightInput, logoRightPreview);
+
+            const addHeaderField = (key = '', value = '') => {
+                const row = document.createElement('div');
+                row.className = 'dynamic-row';
+                row.innerHTML = `<input type="text" name="header_key[]" placeholder="Label (Contoh: Acara)" value="${key}"><input type="text" name="header_value[]" placeholder="Isi (Contoh: Bootcamp)" value="${value}"><button type="button" class="btn btn-delete">&times;</button>`;
+                headerContainer.appendChild(row);
+                row.querySelector('.btn-delete').addEventListener('click', () => row.remove());
+            };
+
+            const addSignatureField = (container, namePrefix, position = '', name = '') => {
+                const row = document.createElement('div');
+                row.className = 'dynamic-row';
+                row.innerHTML = `<input type="text" name="${namePrefix}_position[]" placeholder="Jabatan" value="${position}" required><input type="text" name="${namePrefix}_name[]" placeholder="Nama Lengkap" value="${name}" required><button type="button" class="btn btn-delete">&times;</button>`;
+                container.appendChild(row);
+                row.querySelector('.btn-delete').addEventListener('click', () => row.remove());
+            };
+
+            const updateColumnFormatters = () => {
+                columnFormatsContainer.innerHTML = '';
+                const columnNames = participantColumnsInput.value.split(',').map(s => s.trim()).filter(s => s);
+                const defaultWidths = { 'NO': 5, 'NIM': 20, 'NAMA': 40, 'TANDA TANGAN': 35 };
+
+                columnNames.forEach(name => {
+                    const row = document.createElement('div');
+                    row.className = 'column-format-row';
+                    const defaultWidth = defaultWidths[name.toUpperCase()] || '';
+                    row.innerHTML = `
+                        <div class="col-name">${name}</div>
+                        <input type="hidden" name="col_name[]" value="${name}">
+                        <div class="form-group"><label>Lebar (%)</label><input type="number" name="col_width[]" value="${defaultWidth}" placeholder="Auto"></div>
+                        <div class="form-group"><label>Align</label><select name="col_align[]"><option value="center">Tengah</option><option value="left">Kiri</option><option value="right">Kanan</option></select></div>
+                        <div class="form-group"><label>Tebal</label><select name="col_weight[]"><option value="bold">Bold</option><option value="normal">Normal</option></select></div>
+                        <div class="form-group"><label>Ukuran (pt)</label><input type="number" name="col_size[]" value="12" min="8" max="24"></div>
+                    `;
+                    columnFormatsContainer.appendChild(row);
+                });
+            };
+
+            participantColumnsInput.addEventListener('input', updateColumnFormatters);
+            
+            toggleFormatOptions.addEventListener('change', function() {
+                collapsibleFormatOptions.style.display = this.checked ? 'block' : 'none';
+            });
+            
+            toggleSignatureOptions.addEventListener('change', function() {
+                collapsibleSignatureOptions.style.display = this.checked ? 'block' : 'none';
+            });
+
+            toggleHeaderOptions.addEventListener('change', function() {
+                collapsibleHeaderOptions.style.display = this.checked ? 'block' : 'none';
+            });
+
+            togglePageHFOptions.addEventListener('change', function() {
+                collapsiblePageHFOptions.style.display = this.checked ? 'block' : 'none';
+            });
+
+            addHeaderBtn.addEventListener('click', () => addHeaderField());
+            addSignatureLeftBtn.addEventListener('click', () => addSignatureField(signatureContainerLeft, 'sig_left'));
+            addSignatureCenterBtn.addEventListener('click', () => addSignatureField(signatureContainerCenter, 'sig_center'));
+            addSignatureRightBtn.addEventListener('click', () => addSignatureField(signatureContainerRight, 'sig_right'));
+
+            updateColumnFormatters();
+
+            const participantModeRadios = document.querySelectorAll('input[name="participant_mode"]');
+            const manualInputContainer = document.getElementById('manual-input-container');
+            const generateInputContainer = document.getElementById('generate-input-container');
+            const participantsTextarea = document.getElementById('peserta');
+            const participantCountInput = document.getElementById('participant-count');
+
+            participantModeRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'manual') {
+                        manualInputContainer.style.display = 'block';
+                        generateInputContainer.style.display = 'none';
+                        participantsTextarea.required = true;
+                        participantCountInput.removeAttribute('required');
+                    } else {
+                        manualInputContainer.style.display = 'none';
+                        generateInputContainer.style.display = 'block';
+                        participantsTextarea.required = false;
+                        participantCountInput.setAttribute('required', 'required');
+                    }
+                });
+            });
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault(); 
+                submitButton.disabled = true;
+                submitButton.textContent = 'Memproses...';
+                loadingBar.style.width = '0%';
+                setTimeout(() => { loadingBar.style.width = '90%'; }, 100);
+                showNotification('Sedang memproses permintaan Anda...', 'info');
+
+                const formData = new FormData(form);
+                const selectedMode = formData.get('participant_mode');
+                let participantsData = '';
+
+                if (selectedMode === 'manual') {
+                    participantsData = formData.get('peserta');
+                } else {
+                    const count = parseInt(formData.get('participant_count'), 10) || 0;
+                    const columns = formData.get('participant_columns').split(',');
+                    const dataColumnCount = Math.max(0, columns.length - 2);
+                    const blankRow = ','.repeat(Math.max(0, dataColumnCount));
+                    const generatedRows = [];
+                    for (let i = 0; i < count; i++) {
+                        generatedRows.push(blankRow);
+                    }
+                    participantsData = generatedRows.join('\n');
+                }
+
+                const data = {
+                    logoLeft: logoLeftBase64,
+                    logoRight: logoRightBase64,
+                    logoSizeLeft: formData.get('logo_size_left'),
+                    logoSizeRight: formData.get('logo_size_right'),
+                    headers: [],
+                    participantColumns: formData.get('participant_columns').split(',').map(s => s.trim()),
+                    columnFormats: [],
+                    participants: participantsData,
+                    signatureDate: formData.get('signature_date'),
+                    signaturesLeft: [],
+                    signaturesCenter: [],
+                    signaturesRight: [],
+                    pageHeader: formData.get('page_header'),
+                    pageFooter: formData.get('page_footer')
+                };
+
+                const headerKeys = formData.getAll('header_key[]');
+                const headerValues = formData.getAll('header_value[]');
+                for (let i = 0; i < headerKeys.length; i++) {
+                    data.headers.push({ key: headerKeys[i], value: headerValues[i] });
+                }
+
+                const colNames = formData.getAll('col_name[]');
+                const colWidths = formData.getAll('col_width[]');
+                const colAligns = formData.getAll('col_align[]');
+                const colWeights = formData.getAll('col_weight[]');
+                const colSizes = formData.getAll('col_size[]');
+
+                for (let i = 0; i < colNames.length; i++) {
+                    data.columnFormats.push({
+                        name: colNames[i],
+                        width: colWidths[i],
+                        align: colAligns[i],
+                        weight: colWeights[i],
+                        size: colSizes[i]
+                    });
+                }
+
+                const sigLeftPos = formData.getAll('sig_left_position[]');
+                const sigLeftName = formData.getAll('sig_left_name[]');
+                for (let i = 0; i < sigLeftPos.length; i++) {
+                    data.signaturesLeft.push({ position: sigLeftPos[i], name: sigLeftName[i] });
+                }
+
+                const sigCenterPos = formData.getAll('sig_center_position[]');
+                const sigCenterName = formData.getAll('sig_center_name[]');
+                for (let i = 0; i < sigCenterPos.length; i++) {
+                    data.signaturesCenter.push({ position: sigCenterPos[i], name: sigCenterName[i] });
+                }
+
+                const sigRightPos = formData.getAll('sig_right_position[]');
+                const sigRightName = formData.getAll('sig_right_name[]');
+                for (let i = 0; i < sigRightPos.length; i++) {
+                    data.signaturesRight.push({ position: sigRightPos[i], name: sigRightName[i] });
+                }
+                
+                try {
+                    const response = await fetch('/generate-pdf', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Server error: ${response.status} - ${errorText}`);
+                    }
+
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    
+                    window.open(url, '_blank');
+                    
+                    loadingBar.style.width = '100%';
+                    showNotification('Dokumen berhasil di generate!', 'success');
+
+                } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    showNotification(`Gagal membuat PDF: ${error.message}`, 'error');
+                    loadingBar.style.width = '0%';
+
+                } finally {
+                    setTimeout(() => {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '🚀 Generate & Preview PDF';
+                        loadingBar.style.width = '0%';
+                    }, 500);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
