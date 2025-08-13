@@ -41,7 +41,7 @@
             height: 4px;
             background-color: var(--primary-color);
             width: 0%;
-            z-index: 9999;
+            z-index: 10001;
             transition: width 0.4s ease-out;
         }
 
@@ -49,7 +49,7 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 10000;
+            z-index: 10002;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -80,7 +80,14 @@
             width: 100%;
             max-width: 800px;
         }
-
+        
+        .main-title-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; font-weight: 600; }
         p.subtitle { text-align: center; margin-bottom: 30px; color: var(--dark-gray-color); }
 
@@ -154,7 +161,6 @@
             font-size: 12px;
         }
 
-        /* --- PERUBAHAN UTAMA: Desain Area Upload Logo & Slider --- */
         .logo-upload-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -206,7 +212,6 @@
             width: 100%;
         }
         input[type="file"] { display: none; }
-        /* --- AKHIR PERUBAHAN --- */
 
         .input-mode-selector {
             display: flex; gap: 20px; background-color: var(--light-gray-color);
@@ -309,6 +314,66 @@
         .copyright-footer p {
             margin: 5px 0;
         }
+
+        .guide-button {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--dark-gray-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .guide-button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        .modal-content h4 {
+            margin-top: 20px;
+            margin-bottom: 5px;
+        }
+        .modal-content ul {
+            padding-left: 20px;
+        }
     </style>
 </head>
 <body>
@@ -316,7 +381,10 @@
     <div id="notification-container"></div>
 
     <div class="form-container">
-        <h1>Generator Daftar Hadir</h1>
+        <div class="main-title-container">
+            <h1>Generator Daftar Hadir</h1>
+            <button type="button" class="guide-button" id="open-guide-button">?</button>
+        </div>
         <p class="subtitle">Isi dan tambahkan detail sesuai kebutuhan acara Anda.</p>
         
         <form id="attendance-form">
@@ -468,8 +536,8 @@
         <p style="font-size: 12px; color: #666;">ADVERTISEMENT</p>
         <ins class="adsbygoogle"
              style="display:block"
-             data-ad-client="ca-pub-1681916260628500"
-             data-ad-slot="5546332268"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="YYYYYYYYYY"
              data-ad-format="auto"
              data-full-width-responsive="true"></ins>
         <script>
@@ -480,7 +548,53 @@
     <footer class="copyright-footer">
         <p>Copyright © 2025 Generator Daftar Hadir</p>
         <p>Developed by <a href="#" target="_blank">Guwigo Indonesia</a></p>
+        <!-- --- PERUBAHAN UTAMA: Menambahkan Flag Counter --- -->
+        <div style="margin-top:15px;">
+            <a href="https://info.flagcounter.com/5nXi"><img src="https://s01.flagcounter.com/count2/5nXi/bg_0D2D52/txt_FFFFFF/border_CCCCCC/columns_4/maxflags_12/viewers_0/labels_0/pageviews_1/flags_0/percent_0/" alt="Flag Counter" border="0"></a>
+        </div>
+        <!-- --- AKHIR PERUBAHAN --- -->
     </footer>
+
+    <div id="guide-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="close-guide-button" class="modal-close-button">&times;</button>
+            <h3>Panduan Penggunaan</h3>
+            
+            <h4>Langkah 1: Logo Dokumen (Opsional)</h4>
+            <ul>
+                <li>Klik ikon upload untuk memilih gambar logo untuk sisi kiri dan kanan header.</li>
+                <li>Sesuaikan ukuran setiap logo menggunakan slider di bawahnya.</li>
+            </ul>
+
+            <h4>Langkah 2: Informasi Header Dokumen (Opsional)</h4>
+            <ul>
+                <li>Aktifkan <i>toggle</i> "Informasi Header Dokumen" untuk menambahkan judul atau informasi lain di bawah kop surat.</li>
+                <li>Klik "+ Tambah Info Header" untuk menambahkan baris baru.</li>
+                <li>Isi "Label" (misal: Acara) dan "Isi" (misal: Bootcamp Data).</li>
+                <li><b>Tips:</b> Jika ingin membuat judul, biarkan kolom "Label" kosong.</li>
+            </ul>
+
+            <h4>Langkah 3: Daftar Peserta</h4>
+            <ul>
+                <li><b>Nama Kolom Tabel:</b> Tulis nama-nama kolom yang Anda inginkan, dipisahkan koma (contoh: NO, NIM, NAMA, TANDA TANGAN).</li>
+                <li><b>Format Lanjutan:</b> Aktifkan <i>toggle</i> ini untuk mengatur lebar, perataan, dan gaya teks setiap header tabel.</li>
+                <li><b>Mode Input Peserta:</b> Pilih antara "Input Manual" (salin-tempel dari Excel) atau "Generate Baris Kosong" (membuat template kosong).</li>
+            </ul>
+
+            <h4>Langkah 4: Bagian Tanda Tangan (Opsional)</h4>
+            <ul>
+                <li>Aktifkan <i>toggle</i> "Bagian Tanda Tangan" untuk menambahkan area pengesahan.</li>
+                <li>Isi "Kota dan Tanggal".</li>
+                <li>Gunakan area <b>Kiri, Tengah,</b> atau <b>Kanan</b> untuk menambahkan penanda tangan.</li>
+            </ul>
+
+            <h4>Langkah 5: Generate PDF</h4>
+            <ul>
+                <li>Setelah semua data siap, klik tombol "Generate & Preview PDF".</li>
+                <li>PDF akan terbuka di tab baru, siap untuk diunduh atau dicetak.</li>
+            </ul>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -496,6 +610,22 @@
                 notificationContainer.appendChild(notif);
                 setTimeout(() => { notif.remove(); }, 5000);
             };
+            
+            const guideModal = document.getElementById('guide-modal');
+            const openGuideButton = document.getElementById('open-guide-button');
+            const closeGuideButton = document.getElementById('close-guide-button');
+
+            openGuideButton.addEventListener('click', () => {
+                guideModal.style.display = 'flex';
+            });
+            closeGuideButton.addEventListener('click', () => {
+                guideModal.style.display = 'none';
+            });
+            guideModal.addEventListener('click', (e) => {
+                if (e.target === guideModal) {
+                    guideModal.style.display = 'none';
+                }
+            });
 
             const headerContainer = document.getElementById('header-fields-container');
             const addHeaderBtn = document.getElementById('add-header-btn');
@@ -760,5 +890,3 @@
     </script>
 </body>
 </html>
-
-
